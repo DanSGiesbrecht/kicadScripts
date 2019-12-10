@@ -45,13 +45,16 @@ board = LoadBoard(filename)
 
 pctl = PLOT_CONTROLLER(board)
 
-popt = pctl.GetPlotOptions()
+title = board.GetTitleBlock()
+rev = title.GetRevision()
+print('rev: ' + rev)
 
+popt = pctl.GetPlotOptions()
 popt.SetOutputDirectory(output_directory)
 
 # Set some important plot options:
 popt.SetPlotFrameRef(False)
-popt.SetLineWidth(FromMM(0.35))
+popt.SetLineWidth(FromMM(0.1))
 
 popt.SetAutoScale(False)
 popt.SetScale(1)
@@ -59,7 +62,7 @@ popt.SetMirror(False)
 popt.SetUseGerberAttributes(False)
 popt.SetExcludeEdgeLayer(True)
 popt.SetScale(1)
-popt.SetUseAuxOrigin(True)
+popt.SetUseAuxOrigin(False)
 popt.SetNegative(False)
 popt.SetPlotReference(True)
 popt.SetPlotValue(True)
@@ -78,7 +81,7 @@ plot_plan = [
     ( "PasteTop", F_Paste, "Paste Top", ".gtp"),
     ( "SilkTop", F_SilkS, "Silk Top", ".gto"),
     ( "SilkBottom", B_SilkS, "Silk Bottom", ".gbo"),
-    ( "EdgeCuts", Edge_Cuts, "Edges", ".gml")
+    ( "EdgeCuts", Edge_Cuts, "Edges", ".gm1")
 ]
 
 popt.SetMirror(False)
@@ -96,7 +99,7 @@ for layer_info in plot_plan:
     pctl.ClosePlot()
     # Create a copy with same filename and Protel extensions.
     srcPlot = pctl.GetPlotFileName()
-    dstPlot = os.path.join(output_directory,project_name + layer_info[3])
+    dstPlot = os.path.join(output_directory,project_name + '_r' + rev.replace('.','-') + layer_info[3])
     shutil.move(srcPlot, dstPlot)
     print(layer_info[0] + " => " + dstPlot)
     fab_files.append(dstPlot)
@@ -114,7 +117,7 @@ for innerlyr in range ( 1, lyrcnt-1 ):
     pctl.ClosePlot()
     # Create a copy with same filename and Protel extensions.
     srcPlot = pctl.GetPlotFileName()
-    dstPlot = os.path.join(output_directory,project_name + '.g' + str(innerlyr + 1))
+    dstPlot = os.path.join(output_directory,project_name + '_r' + rev.replace('.','-') + '.g' + str(innerlyr + 1))
     shutil.move(srcPlot, dstPlot)
     print(lyrname + " => " + dstPlot)
     fab_files.append(dstPlot)
@@ -136,7 +139,7 @@ else:
 mergeNPTH = True
 drlwriter.SetOptions( mirror, minimalHeader, offset, mergeNPTH )
 
-metricFmt = True
+metricFmt = False
 drlwriter.SetFormat( metricFmt )
 
 genDrl = True
@@ -144,7 +147,7 @@ genMap = False
 drlwriter.CreateDrillandMapFilesSet( output_directory, genDrl, genMap );
 
 srcPlot = os.path.join(output_directory,project_name + '.drl')
-dstPlot = os.path.join(output_directory,project_name + '.txt')
+dstPlot = os.path.join(output_directory,project_name + '_r' + rev.replace('.','-') + '.drl')
 shutil.move(srcPlot, dstPlot)
 print(srcPlot + " => " + dstPlot)
 fab_files.append(dstPlot)
@@ -156,7 +159,7 @@ drlwriter.GenDrillReportFile( rptfn );
 
 
 #zip up all files
-zf = zipfile.ZipFile(os.path.join(output_directory,project_name + '_' + today + '.zip'), "w", zipfile.ZIP_DEFLATED)
+zf = zipfile.ZipFile(os.path.join(output_directory, today + '_' + project_name + '_r' + rev.replace('.','-') + '.zip'), "w", zipfile.ZIP_DEFLATED)
 abs_src = os.path.abspath(output_directory)
 for filename in  fab_files:
         absname = os.path.abspath(filename)
